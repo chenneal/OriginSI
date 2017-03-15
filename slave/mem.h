@@ -15,8 +15,8 @@
 
 struct PROC_MEM_HEAD
 {
-    Size total_size;
-    Size freeoffset;
+	Size total_size;
+	Size freeoffset;
 };
 
 typedef struct PROC_MEM_HEAD PMHEAD;

@@ -33,66 +33,66 @@ void InitProcHead(void)
 
 void ResetProc(void)
 {
-    prohd->maxprocs=THREADNUM;
-    prohd->numprocs=0;
+	prohd->maxprocs=THREADNUM;
+	prohd->numprocs=0;
 }
 
 void *ProcStart(void* args)
 {
-    int i;
-    int j;
-    terminalArgs *temp;
-    temp = (terminalArgs*) args;
-    char* start=NULL;
-    THREAD* threadinfo;
+	int i;
+	int j;
+	terminalArgs *temp;
+	temp = (terminalArgs*) args;
+	char* start=NULL;
+	THREAD* threadinfo;
 
-    Size size;
+	Size size;
 
-    pthread_mutex_lock(&prohd->ilock);
-    i=prohd->numprocs++;
-    pthread_mutex_unlock(&prohd->ilock);
+	pthread_mutex_lock(&prohd->ilock);
+	i=prohd->numprocs++;
+	pthread_mutex_unlock(&prohd->ilock);
 
-    start=(char*)MemStart+MEM_PROC_SIZE*i;
+	start=(char*)MemStart+MEM_PROC_SIZE*i;
 
-    size=sizeof(THREAD);
+	size=sizeof(THREAD);
 
-    threadinfo=(THREAD*)MemAlloc((void*)start,size);
+	threadinfo=(THREAD*)MemAlloc((void*)start,size);
 
-    if(threadinfo==NULL)
-    {
-        printf("memory alloc error during process running.\n");
-        exit(-1);
-    }
+	if(threadinfo==NULL)
+	{
+		printf("memory alloc error during process running.\n");
+		exit(-1);
+	}
 
-    pthread_setspecific(ThreadInfoKey,threadinfo);
+	pthread_setspecific(ThreadInfoKey,threadinfo);
 
-    /* global index for thread */
-    threadinfo->index=nodeid*threadnum+i;
-    threadinfo->memstart=(char*)start;
+	/* global index for thread */
+	threadinfo->index=nodeid*threadnum+i;
+	threadinfo->memstart=(char*)start;
 
-    if (temp->type == 0)
-    {
-       InitClient(nodeid, i);
-    }
+	if (temp->type == 0)
+	{
+	   InitClient(nodeid, i);
+	}
 
-    else
-    {
-       /* ensure the connect with other nodes in distributed system. */
+	else
+	{
+	   /* ensure the connect with other nodes in distributed system. */
        for (j = 0; j < nodenum; j++)
        {
-          InitClient(j, i);
+	      InitClient(j, i);
        }
-    }
+	}
 
     /* ensure the connect with the master node. */
     InitMasterClient(i);
 
-    InitRandomSeed();
+	InitRandomSeed();
 
-    /* memory allocation for each transaction data struct. */
-    InitTransactionStructMemAlloc();
+	/* memory allocation for each transaction data struct. */
+	InitTransactionStructMemAlloc();
 
     TransactionRunSchedule(args);
 
-    return NULL;
+	return NULL;
 }

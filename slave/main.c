@@ -17,36 +17,36 @@
 
 int main(int argc, char *argv[])
 {
-    pid_t pid;
+	pid_t pid;
 
-    /* do some ready work before start the distributed system */
-    GetReady();
+	/* do some ready work before start the distributed system */
+	GetReady();
 
-    if ((pid = fork()) < 0)
-    {
-       printf("fork error\n");
-    }
+	if ((pid = fork()) < 0)
+	{
+	   printf("fork error\n");
+	}
 
-    else if(pid == 0)
-    {
-        /* storage process */
-        InitStorage();
-        //ExitSys();
-        //printf("storage process finished.\n");
-    }
+	else if(pid == 0)
+	{
+		/* storage process */
+		InitStorage();
+		//ExitSys();
+		printf("storage process finished.\n");
+	}
 
-    else
-    {
-       /* transaction process */
-       InitTransaction();
+	else
+	{
+	   /* transaction process */
+	   InitTransaction();
        dataLoading();
        /* wait other slave nodes until all of them have loaded data. */
        WaitDataReady();
        /* begin run the benchmark. */
        RunTerminals(THREADNUM);
 
-       //printf("transaction process finished.\n");
-    }
-    return 0;
+	   printf("transaction process finished.\n");
+	}
+	return 0;
 }
 

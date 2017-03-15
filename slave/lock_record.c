@@ -25,91 +25,91 @@ int LockHash(int table_id, TupleId tuple_id);
 
 int DataLockInsert(DataLock* lock, int index)
 {
-    DataLock* lockptr;
-    DataLock* start;
-    int step;
-    int table_id;
-    int tuple_id;
-    int flag=0;
-    int search=0;
+	DataLock* lockptr;
+	DataLock* start;
+	int step;
+	int table_id;
+	int tuple_id;
+	int flag=0;
+	int search=0;
 
-    start = (serverdata+index)->lockrecord;
+	start = (serverdata+index)->lockrecord;
 
-    table_id=lock->table_id;
-    tuple_id=lock->tuple_id;
+	table_id=lock->table_id;
+	tuple_id=lock->tuple_id;
 
-    step=LockHash(table_id,tuple_id);
-    lockptr=start+step;
-    search+=1;
+	step=LockHash(table_id,tuple_id);
+	lockptr=start+step;
+	search+=1;
 
-    while(lockptr->tuple_id > 0)
-    {
-        if(search > MaxDataLockNum)
-        {
-            /* there is no free space. */
-            flag=2;
-            break;
-        }
-        if(lockptr->table_id==lock->table_id && lockptr->tuple_id==lock->tuple_id)
-        {
-            /* the lock already exists. */
-            flag=1;
-            break;
-        }
-        step=(step+1)%MaxDataLockNum;
-        lockptr=start+step;
-        search++;
-    }
+	while(lockptr->tuple_id > 0)
+	{
+		if(search > MaxDataLockNum)
+		{
+			/* there is no free space. */
+			flag=2;
+			break;
+		}
+		if(lockptr->table_id==lock->table_id && lockptr->tuple_id==lock->tuple_id)
+		{
+			/* the lock already exists. */
+			flag=1;
+			break;
+		}
+		step=(step+1)%MaxDataLockNum;
+		lockptr=start+step;
+		search++;
+	}
 
-    if(flag==0)
-    {
-        /* succeed in finding free space, so insert it. */
-        lockptr->table_id=lock->table_id;
-        lockptr->tuple_id=lock->tuple_id;
-        lockptr->lockmode=lock->lockmode;
-        lockptr->index=lock->index;
-        ((serverdata+index)->lock_num)++;
-        return 1;
-    }
+	if(flag==0)
+	{
+		/* succeed in finding free space, so insert it. */
+		lockptr->table_id=lock->table_id;
+		lockptr->tuple_id=lock->tuple_id;
+		lockptr->lockmode=lock->lockmode;
+		lockptr->index=lock->index;
+		((serverdata+index)->lock_num)++;
+		return 1;
+	}
 
-    else if(flag==1)
-    {
-        /* already exists. */
-        return -1;
-    }
-    else
-    {
-        /* no more free space. */
-        printf("no more free space for lock.\n");
-        return 0;
-    }
+	else if(flag==1)
+	{
+		/* already exists. */
+		return -1;
+	}
+	else
+	{
+		/* no more free space. */
+		printf("no more free space for lock.\n");
+		return 0;
+	}
 }
 
 int LockHash(int table_id, TupleId tuple_id)
 {
-    return (((table_id*10)%MaxDataLockNum+tuple_id%10)%MaxDataLockNum);
+	return (((table_id*10)%MaxDataLockNum+tuple_id%10)%MaxDataLockNum);
 }
 
 void DataLockRelease(int index)
 {
-    int step;
-    DataLock* lockptr;
-    DataLock* start;
+	int step;
+	DataLock* lockptr;
+	DataLock* start;
 
-    start = (serverdata+index)->lockrecord;
+	start = (serverdata+index)->lockrecord;
 
-    lockptr=start;
+	lockptr=start;
 
-    /* release all locks that current transaction holds. */
-    for(step=0;step<MaxDataLockNum;step++)
-    {
-        lockptr=start+step;
-        /* wait to change. */
-        if(lockptr->tuple_id > 0)
-        {
-            pthread_rwlock_unlock(&(RecordLock[lockptr->table_id][lockptr->index]));
-        }
-    }
+	/* release all locks that current transaction holds. */
+	for(step=0;step<MaxDataLockNum;step++)
+	{
+		lockptr=start+step;
+		/* wait to change. */
+		if(lockptr->tuple_id > 0)
+		{
+	        pthread_rwlock_unlock(&(RecordLock[lockptr->table_id][lockptr->index]));
+		}
+	}
 }
 
 /*
@@ -118,29 +118,29 @@ void DataLockRelease(int index)
  */
 int IsDataLockExist(int table_id, TupleId tuple_id, LockMode mode, int index)
 {
-    int step,count,flag;
-    DataLock* lockptr;
-    DataLock* start;
+	int step,count,flag;
+	DataLock* lockptr;
+	DataLock* start;
 
-    start = (serverdata+index)->lockrecord;
-    step=LockHash(table_id,tuple_id);
-    lockptr=start+step;
+	start = (serverdata+index)->lockrecord;
+	step=LockHash(table_id,tuple_id);
+	lockptr=start+step;
 
-    count=0;
-    flag=0;
-    while(lockptr->tuple_id > 0 && count<MaxDataLockNum)
-    {
-        if(lockptr->table_id==table_id && lockptr->tuple_id==tuple_id && lockptr->lockmode==mode)
-        {
-            flag=1;
-            break;
-        }
-        step=(index+1)%MaxDataLockNum;
-        lockptr=start+step;
-        count++;
-    }
+	count=0;
+	flag=0;
+	while(lockptr->tuple_id > 0 && count<MaxDataLockNum)
+	{
+		if(lockptr->table_id==table_id && lockptr->tuple_id==tuple_id && lockptr->lockmode==mode)
+		{
+			flag=1;
+			break;
+		}
+		step=(index+1)%MaxDataLockNum;
+		lockptr=start+step;
+		count++;
+	}
 
-    return flag;
+	return flag;
 }
 /*
  * Is the write-lock on data (table_id,tuple_id) being hold by current transaction.
@@ -148,9 +148,9 @@ int IsDataLockExist(int table_id, TupleId tuple_id, LockMode mode, int index)
  */
 int IsWrLockHolding(uint32_t table_id, TupleId tuple_id, int index)
 {
-    if(IsDataLockExist(table_id,tuple_id,LOCK_EXCLUSIVE,index))
-        return 1;
-    return 0;
+	if(IsDataLockExist(table_id,tuple_id,LOCK_EXCLUSIVE,index))
+		return 1;
+	return 0;
 }
 
 /*
@@ -159,7 +159,7 @@ int IsWrLockHolding(uint32_t table_id, TupleId tuple_id, int index)
  */
 int IsRdLockHolding(uint32_t table_id, TupleId tuple_id, int index)
 {
-    if(IsDataLockExist(table_id,tuple_id,LOCK_SHARED,index))
-        return 1;
-    return 0;
+	if(IsDataLockExist(table_id,tuple_id,LOCK_SHARED,index))
+		return 1;
+	return 0;
 }

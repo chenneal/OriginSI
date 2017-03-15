@@ -16,15 +16,15 @@
 
 struct TransactionData
 {
-    TransactionId tid;
+	TransactionId tid;
 
-    TimeStampTz starttime;
+	TimeStampTz starttime;
 
-    TimeStampTz stoptime;
+	TimeStampTz stoptime;
 
-    bool trans_snap[NODENUMMAX];
+	bool trans_snap[NODENUMMAX];
 
-    bool pure_insert[NODENUMMAX];
+	bool pure_insert[NODENUMMAX];
 };
 
 typedef struct TransactionData TransactionData;

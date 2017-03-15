@@ -14,14 +14,14 @@
  */
 void AcquireWrLock(pthread_rwlock_t* lock, LockMode mode)
 {
-    if(mode == LOCK_SHARED)
-    {
-        pthread_rwlock_rdlock(lock);
-    }
-    else
-    {
-        pthread_rwlock_wrlock(lock);
-    }
+	if(mode == LOCK_SHARED)
+	{
+		pthread_rwlock_rdlock(lock);
+	}
+	else
+	{
+		pthread_rwlock_wrlock(lock);
+	}
 }
 
 /*
@@ -29,7 +29,7 @@ void AcquireWrLock(pthread_rwlock_t* lock, LockMode mode)
  */
 void ReleaseWrLock(pthread_rwlock_t* lock)
 {
-    pthread_rwlock_unlock(lock);
+	pthread_rwlock_unlock(lock);
 }
 
 

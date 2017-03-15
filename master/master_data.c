@@ -39,7 +39,7 @@ void ProcessStartTransaction(uint64_t *recv_buffer, int conn, int mindex)
    *(buf+4) = tid;
 
    if (send(conn, msend_buffer[mindex], size*sizeof(uint32_t), 0) == -1)
-       printf("process start transaction send error\n");
+	   printf("process start transaction send error\n");
 }
 
 void ProcessEndTimestamp(uint64_t *recv_buffer, int conn, int mindex)
@@ -51,20 +51,20 @@ void ProcessEndTimestamp(uint64_t *recv_buffer, int conn, int mindex)
    *(msend_buffer[mindex]) = endtime;
 
    if (send(conn, msend_buffer[mindex], sizeof(uint64_t), 0) == -1)
-       printf("process end time stamp send error\n");
+	   printf("process end time stamp send error\n");
 }
 
 void ProcessUpdateProcarray(uint64_t *recv_buffer, int conn, int mindex)
 {
-    int index;
-    int status = 1;
+	int index;
+	int status = 1;
 
-    index = recv_buffer[1];
+	index = recv_buffer[1];
 
-    AtEnd_ProcArray(index);
+	AtEnd_ProcArray(index);
 
-    *(msend_buffer[mindex]) = status;
+	*(msend_buffer[mindex]) = status;
 
-    if (send(conn, msend_buffer[mindex], sizeof(uint64_t), 0) == -1)
-       printf("process end time stamp send error\n");
+	if (send(conn, msend_buffer[mindex], sizeof(uint64_t), 0) == -1)
+	   printf("process end time stamp send error\n");
 }

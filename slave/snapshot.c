@@ -18,57 +18,57 @@
 
 void InitTransactionSnapshotDataMemAlloc(void)
 {
-    Snapshot* snap;
-    THREAD* threadinfo;
-    char* memstart;
-    Size size;
+	Snapshot* snap;
+	THREAD* threadinfo;
+	char* memstart;
+	Size size;
 
-    threadinfo=(THREAD*)pthread_getspecific(ThreadInfoKey);
-    memstart=threadinfo->memstart;
+	threadinfo=(THREAD*)pthread_getspecific(ThreadInfoKey);
+	memstart=threadinfo->memstart;
 
-    size=SnapshotSize();
+	size=SnapshotSize();
 
-    snap=(Snapshot*)MemAlloc((void*)memstart,size);
+	snap=(Snapshot*)MemAlloc((void*)memstart,size);
 
-    if(snap == NULL)
-    {
-        printf("snapshot memory allocation error.\n");
-        return;
-    }
+	if(snap == NULL)
+	{
+		printf("snapshot memory allocation error.\n");
+		return;
+	}
 
-    size=sizeof(TransactionId)*MAXPROCS;
-    snap->tid_array=(TransactionId*)MemAlloc((void*)memstart,size);
-    if(snap->tid_array == NULL)
-    {
-        printf("snapshot array allocation error.\n");
-        return;
-    }
+	size=sizeof(TransactionId)*MAXPROCS;
+	snap->tid_array=(TransactionId*)MemAlloc((void*)memstart,size);
+	if(snap->tid_array == NULL)
+	{
+		printf("snapshot array allocation error.\n");
+		return;
+	}
 
-    pthread_setspecific(SnapshotDataKey,snap);
+	pthread_setspecific(SnapshotDataKey,snap);
 }
 
 void InitTransactionSnapshotData(void)
 {
-    Snapshot* snap;
-    Size size;
+	Snapshot* snap;
+	Size size;
 
 
-    snap=(Snapshot*)pthread_getspecific(SnapshotDataKey);
+	snap=(Snapshot*)pthread_getspecific(SnapshotDataKey);
 
-    snap->tid_min=0;
+	snap->tid_min=0;
 
-    snap->tid_max=0;
-    snap->tcount=0;
+	snap->tid_max=0;
+	snap->tcount=0;
 
-    size=sizeof(TransactionId)*MAXPROCS;
+	size=sizeof(TransactionId)*MAXPROCS;
 
-    memset((char*)snap->tid_array,0,size);
+	memset((char*)snap->tid_array,0,size);
 
 }
 
 Size SnapshotSize(void)
 {
-    return sizeof(Snapshot);
+	return sizeof(Snapshot);
 }
 
 
@@ -77,19 +77,19 @@ Size SnapshotSize(void)
  */
 bool TidInSnapshot(TransactionId tid, Snapshot * snap)
 {
-    int i;
-    /* transaction committed or abort. */
-    if(tid < snap->tid_min)
-        return false;
+	int i;
+	/* transaction committed or abort. */
+	if(tid < snap->tid_min)
+		return false;
 
-    /* transaction still in running. */
-    if(tid > snap->tid_max)
-        return true;
+	/* transaction still in running. */
+	if(tid > snap->tid_max)
+		return true;
 
-    for(i=0;i<snap->tcount;i++)
-    {
-        if(tid == (TransactionId)snap->tid_array[i])
-            return true;
-    }
-    return false;
+	for(i=0;i<snap->tcount;i++)
+	{
+		if(tid == (TransactionId)snap->tid_array[i])
+			return true;
+	}
+	return false;
 }

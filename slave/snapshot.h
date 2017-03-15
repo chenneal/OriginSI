@@ -12,12 +12,12 @@
 
 struct SnapshotData
 {
-    TransactionId tid_min;
-    TransactionId tid_max;
+	TransactionId tid_min;
+	TransactionId tid_max;
 
-    int tcount;
+	int tcount;
 
-    TransactionId* tid_array;
+	TransactionId* tid_array;
 };
 
 typedef struct SnapshotData Snapshot;

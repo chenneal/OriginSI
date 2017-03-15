@@ -31,90 +31,90 @@
 //get the transaction id, add proc array and get the snapshot from the master node.
 void StartTransactionGetData(void)
 {
-    int index;
-    int i;
+	int index;
+	int i;
 
-    int lindex;
-    pthread_t pid;
-    Snapshot* snap;
-    THREAD* threadinfo;
-    TransactionData* td;
+	int lindex;
+	pthread_t pid;
+	Snapshot* snap;
+	THREAD* threadinfo;
+	TransactionData* td;
 
-    td=(TransactionData*)pthread_getspecific(TransactionDataKey);
-    threadinfo=(THREAD*)pthread_getspecific(ThreadInfoKey);
-    snap=(Snapshot*)pthread_getspecific(SnapshotDataKey);
+	td=(TransactionData*)pthread_getspecific(TransactionDataKey);
+	threadinfo=(THREAD*)pthread_getspecific(ThreadInfoKey);
+	snap=(Snapshot*)pthread_getspecific(SnapshotDataKey);
 
-    int size = 3 + 1 + 1 + MAXPROCS;
+	int size = 3 + 1 + 1 + MAXPROCS;
 
-    index=threadinfo->index;
-    lindex = GetLocalIndex(index);
-    pid = pthread_self();
-    uint32_t* buf = (uint32_t*)recv_buffer[lindex];
+	index=threadinfo->index;
+	lindex = GetLocalIndex(index);
+	pid = pthread_self();
+	uint32_t* buf = (uint32_t*)recv_buffer[lindex];
 
-    *(send_buffer[lindex]) = cmd_starttransaction;
-    *(send_buffer[lindex]+1) = index;
-    *(send_buffer[lindex]+2) = pid;
+	*(send_buffer[lindex]) = cmd_starttransaction;
+	*(send_buffer[lindex]+1) = index;
+	*(send_buffer[lindex]+2) = pid;
 
-    if (send(server_socket[lindex], send_buffer[lindex], 3*sizeof(uint64_t), 0) == -1)
-        printf("start transaction send error\n");
-    if (recv(server_socket[lindex], recv_buffer[lindex], size*sizeof(uint32_t), 0) == -1)
-        printf("start transaction recv error\n");
+	if (send(server_socket[lindex], send_buffer[lindex], 3*sizeof(uint64_t), 0) == -1)
+		printf("start transaction send error\n");
+	if (recv(server_socket[lindex], recv_buffer[lindex], size*sizeof(uint32_t), 0) == -1)
+		printf("start transaction recv error\n");
 
-    // get the transaction ID
-    td->tid = *(buf+4);
+	// get the transaction ID
+	td->tid = *(buf+4);
 
-    if(!TransactionIdIsValid(td->tid))
-    {
-        printf("transaction ID assign error.\n");
-        return;
-    }
+	if(!TransactionIdIsValid(td->tid))
+	{
+		printf("transaction ID assign error.\n");
+		return;
+	}
 
-    td->starttime = *(buf+3);
-    // get the snapshot
-    snap->tcount = *(buf);
-    snap->tid_min =*(buf+1);
-    snap->tid_max = *(buf+2);
+	td->starttime = *(buf+3);
+	// get the snapshot
+	snap->tcount = *(buf);
+	snap->tid_min =*(buf+1);
+	snap->tid_max = *(buf+2);
 
-    for (i = 0; i < MAXPROCS; i++)
-        snap->tid_array[i] = *(buf+5+i);
+	for (i = 0; i < MAXPROCS; i++)
+		snap->tid_array[i] = *(buf+5+i);
 
-    for(i = 0; i < NODENUMMAX; i++)
-    {
-       td->trans_snap[i] = false;
-       td->pure_insert[i] = true;
-    }
+	for(i = 0; i < NODENUMMAX; i++)
+	{
+	   td->trans_snap[i] = false;
+	   td->pure_insert[i] = true;
+	}
 }
 
 void setPureInsert(int nid)
 {
-    TransactionData* td;
-    td=(TransactionData*)pthread_getspecific(TransactionDataKey);
+	TransactionData* td;
+	td=(TransactionData*)pthread_getspecific(TransactionDataKey);
 
-    td->pure_insert[nid] = false;
+	td->pure_insert[nid] = false;
 }
 
 TimeStampTz GetTransactionStopTimestamp(void)
 {
-    THREAD* threadinfo;
-    int index;
-    TransactionData* td;
+	THREAD* threadinfo;
+	int index;
+	TransactionData* td;
 
-    td=(TransactionData*)pthread_getspecific(TransactionDataKey);
-    // get the pointer to current thread information.
-    threadinfo=(THREAD*)pthread_getspecific(ThreadInfoKey);
+	td=(TransactionData*)pthread_getspecific(TransactionDataKey);
+	// get the pointer to current thread information.
+	threadinfo=(THREAD*)pthread_getspecific(ThreadInfoKey);
 
-    index=threadinfo->index;
-    int lindex;
-    lindex = GetLocalIndex(index);
+	index=threadinfo->index;
+	int lindex;
+	lindex = GetLocalIndex(index);
 
-    *(send_buffer[lindex]) = cmd_getendtimestamp;
-    if (send(server_socket[lindex], send_buffer[lindex], sizeof(uint64_t), 0) == -1)
-       printf("get end time stamp send error\n");
-    if (recv(server_socket[lindex], recv_buffer[lindex], sizeof(uint64_t), 0) == -1)
-       printf("get end time stamp recv error\n");
+	*(send_buffer[lindex]) = cmd_getendtimestamp;
+	if (send(server_socket[lindex], send_buffer[lindex], sizeof(uint64_t), 0) == -1)
+	   printf("get end time stamp send error\n");
+	if (recv(server_socket[lindex], recv_buffer[lindex], sizeof(uint64_t), 0) == -1)
+	   printf("get end time stamp recv error\n");
 
-    td->stoptime = *(recv_buffer[lindex]);
-    return (td->stoptime);
+	td->stoptime = *(recv_buffer[lindex]);
+	return (td->stoptime);
 }
 
 void UpdateProcArray()
@@ -132,38 +132,38 @@ void UpdateProcArray()
    *(send_buffer[lindex]+1) = index;
 
    if (send(server_socket[lindex], send_buffer[lindex], 2*sizeof(uint64_t), 0) == -1)
-      printf("update proc array send error\n");
+	  printf("update proc array send error\n");
    if (recv(server_socket[lindex], recv_buffer[lindex], sizeof(uint64_t), 0) == -1)
-      printf("update proc array recv error\n");
+	  printf("update proc array recv error\n");
 }
 
 void InitTransactionStructMemAlloc(void)
 {
-    TransactionData* td;
-    THREAD* threadinfo;
-    char* memstart;
-    Size size;
+	TransactionData* td;
+	THREAD* threadinfo;
+	char* memstart;
+	Size size;
 
-    threadinfo=(THREAD*)pthread_getspecific(ThreadInfoKey);
-    memstart=threadinfo->memstart;
+	threadinfo=(THREAD*)pthread_getspecific(ThreadInfoKey);
+	memstart=threadinfo->memstart;
 
-    size=sizeof(TransactionData);
+	size=sizeof(TransactionData);
 
-    td=(TransactionData*)MemAlloc((void*)memstart,size);
+	td=(TransactionData*)MemAlloc((void*)memstart,size);
 
-    if(td==NULL)
-    {
-        printf("memalloc error.\n");
-        return;
-    }
+	if(td==NULL)
+	{
+		printf("memalloc error.\n");
+		return;
+	}
 
-    pthread_setspecific(TransactionDataKey,td);
+	pthread_setspecific(TransactionDataKey,td);
 
-    // to set snapshot-data memory.
-    InitTransactionSnapshotDataMemAlloc();
+	// to set snapshot-data memory.
+	InitTransactionSnapshotDataMemAlloc();
 
-    // to set data memory.
-    InitDataMemAlloc();
+	// to set data memory.
+	InitDataMemAlloc();
 }
 
 /*
@@ -172,115 +172,94 @@ void InitTransactionStructMemAlloc(void)
  */
 void StartTransaction(void)
 {
-    InitTransactionSnapshotData();
+	InitTransactionSnapshotData();
 
-    // to set data memory.
-    InitDataMem();
+	// to set data memory.
+	InitDataMem();
 
-    StartTransactionGetData();
+	StartTransactionGetData();
 }
 
 void CommitTransaction(void)
 {
-    GetTransactionStopTimestamp();
+	GetTransactionStopTimestamp();
 
-    CommitDataRecord();
+	CommitDataRecord();
 
-    UpdateProcArray();
+	UpdateProcArray();
 
-    TransactionMemClean();
+	TransactionMemClean();
 }
 
 void AbortTransaction(void)
 {
-    // process array clean should be after function 'AbortDataRecord'.
+	// process array clean should be after function 'AbortDataRecord'.
 
-    AbortDataRecord();
+	AbortDataRecord();
 
-    // once abort, clean the process array after clean updated-data.
-    UpdateProcArray();
+	// once abort, clean the process array after clean updated-data.
+	UpdateProcArray();
 
-    TransactionMemClean();
+	TransactionMemClean();
 }
 
 void ReleaseConnect(void)
 {
-    int i;
-    uint64_t release_buffer[1];
-    release_buffer[0] = cmd_release_master;
-    THREAD* threadinfo;
-    int index2;
+	int i;
+	uint64_t release_buffer[1];
+	release_buffer[0] = cmd_release_master;
+	THREAD* threadinfo;
+	int index2;
 
-    int conn;
-    uint64_t* sbuffer;
+	threadinfo=(THREAD*)pthread_getspecific(ThreadInfoKey);
+	index2=threadinfo->index;
+	int lindex;
+	lindex = GetLocalIndex(index2);
 
-    threadinfo=(THREAD*)pthread_getspecific(ThreadInfoKey);
-    index2=threadinfo->index;
-    int lindex;
-    lindex = GetLocalIndex(index2);
+	for (i = 0; i < nodenum; i++)
+	{
+		if (Send1(lindex, i, cmd_release) == -1)
+			printf("release connect server %d send error\n", i);
+	}
 
-    sbuffer=send_buffer[lindex];
-
-    for (i = 0; i < nodenum; i++)
-    {
-        conn=connect_socket[i][lindex];
-
-        //send data-insert to node "i".
-        *(sbuffer) = cmd_release;
-
-        int num = 1;
-        Send(conn, sbuffer, num);
-    }
-
-    if (send(server_socket[lindex], release_buffer, sizeof(release_buffer), 0) == -1)
-        printf("release connect master send error\n");
+	if (send(server_socket[lindex], release_buffer, sizeof(release_buffer), 0) == -1)
+		printf("release connect master send error\n");
 
 }
 
 void DataReleaseConnect(void)
 {
-    int conn;
-    uint64_t* sbuffer;
+	uint64_t release_buffer[1];
 
-    uint64_t release_buffer[1];
+	release_buffer[0] = cmd_release_master;
 
-    sbuffer=send_buffer[0];
-
-    conn=connect_socket[nodeid][0];
-
-    // send data-insert to node itself.
-    *(sbuffer) = cmd_release;
-
-    int num = 1;
-    Send(conn, sbuffer, num);
-
-    release_buffer[0] = cmd_release_master;
-
-    if (send(server_socket[0], release_buffer, sizeof(release_buffer), 0) == -1)
-        printf("data release connect master send error\n");
+	if (Send1(0, nodeid, cmd_release) == -1)
+		printf("data release connect server send error\n");
+	if (send(server_socket[0], release_buffer, sizeof(release_buffer), 0) == -1)
+		printf("data release connect master send error\n");
 }
 
 /*
 void TransactionLoadData(int i)
 {
-    int j;
-    int result;
-    int index;
+	int j;
+	int result;
+	int index;
     for (j = 0; j < 20; j++)
-    {
+	{
       StartTransaction();
       Data_Insert(2, j+1, j+1, nodeid);
       result=PreCommit(&index);
       if(result == 1)
       {
-          CommitTransaction();
+      	CommitTransaction();
       }
       else
       {
-            //current transaction has to rollback.
-            AbortTransaction(index);
+      	  //current transaction has to rollback.
+      	  AbortTransaction(index);
       }
-    }
+	}
     DataReleaseConnect();
     ResetProc();
     ResetMem(0);
@@ -288,95 +267,67 @@ void TransactionLoadData(int i)
 */
 void TransactionRunSchedule(void* args)
 {
-    //to run transactions according to args.
-    int type;
-    int rv;
-    terminalArgs* param=(terminalArgs*)args;
-    type=param->type;
+	//to run transactions according to args.
+	int type;
+	int rv;
+	terminalArgs* param=(terminalArgs*)args;
+	type=param->type;
 
-    if(type==0)
-    {
-        printf("begin LoadData......\n");
-        //LoadData();
+	if(type==0)
+	{
+		printf("begin LoadData......\n");
+		LoadData();
+		DataReleaseConnect();
+		ResetMem(0);
+		ResetProc();
+	}
+	else
+	{
+		printf("ready to execute transactions...\n");
 
-        //smallbank
-        //LoadBankData();
-        switch(benchmarkType)
-        {
-        case TPCC:
-      	  LoadData();
-      	  break;
-        case SMALLBANK:
-      	  LoadBankData();
-      	  break;
-        default:
-      	  printf("benchmark not specified\n");
-        }
-        DataReleaseConnect();
-        ResetMem(0);
-        ResetProc();
-    }
-    else
-    {
-        printf("ready to execute transactions...\n");
-
-        rv=pthread_barrier_wait(&barrier);
-        if(rv != 0 && rv != PTHREAD_BARRIER_SERIAL_THREAD)
-        {
-            printf("Couldn't wait on barrier\n");
-            exit(-1);
-        }
+		rv=pthread_barrier_wait(&barrier);
+		if(rv != 0 && rv != PTHREAD_BARRIER_SERIAL_THREAD)
+		{
+			printf("Couldn't wait on barrier\n");
+			exit(-1);
+		}
 
 
-        printf("begin execute transactions...\n");
-        //executeTransactions(transactionsPerTerminal, param->whse_id, param->dist_id, param->StateInfo);
-
-        //smallbank
-        //executeTransactionsBank(transactionsPerTerminal, param->StateInfo);
-        switch(benchmarkType)
-        {
-        case TPCC:
-      	  executeTransactions(transactionsPerTerminal, param->whse_id, param->dist_id, param->StateInfo);
-      	  break;
-        case SMALLBANK:
-      	  executeTransactionsBank(transactionsPerTerminal, param->StateInfo);
-      	  break;
-        default:
-      	  printf("benchmark not specified\n");
-        }
-        ReleaseConnect();
-    }
+		printf("begin execute transactions...\n");
+		executeTransactions(transactionsPerTerminal, param->whse_id, param->dist_id, param->StateInfo);
+		ReleaseConnect();
+	}
 }
 
 void LocalCommitTransaction(int index, TimeStampTz ctime)
 {
     LocalCommitDataRecord(index, ctime);
 
-    DataLockRelease(index);
-    ResetServerdata(index);
-    // transaction have over.
-    setTransactionState(index, inactive);
+	DataLockRelease(index);
+	ResetServerdata(index);
+	// transaction have over.
+	setTransactionState(index, inactive);
 }
 
 void LocalAbortTransaction(int index, int trulynum)
 {
-    ServerData* data;
-    data = serverdata + index;
-    // in some status, transaction is failed before the truly manipulate the data record.
-    if (data->lock_num == 0)
-    {
-        setTransactionState(index, aborted);
-        ResetServerdata(index);
-    }
-    else
-    {
-        // need not broadcast the read transactions because now must be a transaction that not arrive the prepared state.
+	ServerData* data;
+	data = serverdata + index;
+	// in some status, transaction is failed before the truly manipulate the data record.
+	if (data->lock_num == 0)
+	{
+		setTransactionState(index, aborted);
+		ResetServerdata(index);
+	}
+	else
+	{
+		// need not broadcast the read transactions because now must be a transaction that not arrive the prepared state.
         LocalAbortDataRecord(index, trulynum);
         // wake up the read transaction
         setTransactionState(index, aborted);
         DataLockRelease(index);
         ResetServerdata(index);
-    }
+	}
 }
 
 /*
@@ -385,44 +336,44 @@ void LocalAbortTransaction(int index, int trulynum)
  */
 int LocalPreCommit(int* number, int index, TransactionId tid)
 {
-    LocalDataRecord*start;
-    int num,i,result = 1;
-    LocalDataRecord* ptr;
+	LocalDataRecord*start;
+	int num,i,result = 1;
+	LocalDataRecord* ptr;
 
-    start=(serverdata+index)->datarecord;
+	start=(serverdata+index)->datarecord;
 
-    num=(serverdata+index)->data_num;
+	num=(serverdata+index)->data_num;
 
-    // sort the data-operation records.
-    LocalDataRecordSort(start, num);
+	// sort the data-operation records.
+	LocalDataRecordSort(start, num);
 
-    for(i=0;i<num;i++)
-    {
-        ptr=start+i;
+	for(i=0;i<num;i++)
+	{
+		ptr=start+i;
 
-        switch(ptr->type)
-        {
-            case DataInsert:
-                result=TrulyDataInsert(ptr->table_id, ptr->index, ptr->tuple_id, ptr->value, index, tid);
-                break;
-            case DataUpdate:
-                result=TrulyDataUpdate(ptr->table_id, ptr->index, ptr->tuple_id, ptr->value, index, tid);
-                break;
-            case DataDelete:
-                result=TrulyDataDelete(ptr->table_id, ptr->index, ptr->tuple_id, index, tid);
-                break;
-            default:
-                printf("PreCommit:shouldn't arrive here.\n");
-        }
-        if(result == -1)
-        {
-            //return to roll back.
-            *number=i;
-            return -1;
-        }
-    }
+		switch(ptr->type)
+		{
+		    case DataInsert:
+			    result=TrulyDataInsert(ptr->table_id, ptr->index, ptr->tuple_id, ptr->value, index, tid);
+			    break;
+		    case DataUpdate:
+			    result=TrulyDataUpdate(ptr->table_id, ptr->index, ptr->tuple_id, ptr->value, index, tid);
+			    break;
+		    case DataDelete:
+			    result=TrulyDataDelete(ptr->table_id, ptr->index, ptr->tuple_id, index, tid);
+			    break;
+		    default:
+			    printf("PreCommit:shouldn't arrive here.\n");
+		}
+		if(result == -1)
+		{
+			//return to roll back.
+			*number=i;
+			return -1;
+		}
+	}
     setTransactionState(index, prepared);
-    return 1;
+	return 1;
 }
 
 /*
@@ -431,77 +382,67 @@ int LocalPreCommit(int* number, int index, TransactionId tid)
  */
 int PreCommit(void)
 {
-    TransactionId tid;
-    int index;
-    char* DataMemStart, *start;
-    TransactionData* tdata;
-    int num,i;
-    DataRecord* ptr;
-    THREAD* threadinfo;
-    int lindex;
+	TransactionId tid;
+	int index;
+	char* DataMemStart, *start;
+	TransactionData* tdata;
+	int num,i;
+	DataRecord* ptr;
+	THREAD* threadinfo;
+	int lindex;
 
-    uint64_t* sbuffer;
-    uint64_t* rbuffer;
-    int conn;
+	DataMemStart=(char*)pthread_getspecific(DataMemKey);
+	start=DataMemStart+DataNumSize;
+	num=*(int*)DataMemStart;
 
-    DataMemStart=(char*)pthread_getspecific(DataMemKey);
-    start=DataMemStart+DataNumSize;
-    num=*(int*)DataMemStart;
+	threadinfo=(THREAD*)pthread_getspecific(ThreadInfoKey);
+	index=threadinfo->index;
+	lindex = GetLocalIndex(index);
 
-    threadinfo=(THREAD*)pthread_getspecific(ThreadInfoKey);
-    index=threadinfo->index;
-    lindex = GetLocalIndex(index);
+	tdata=(TransactionData*)pthread_getspecific(TransactionDataKey);
+	tid=tdata->tid;
 
-    sbuffer=send_buffer[lindex];
-    rbuffer=recv_buffer[lindex];
+	// sort the data-operation records.
+	DataRecordSort((DataRecord*)start, num);
 
-    tdata=(TransactionData*)pthread_getspecific(TransactionDataKey);
-    tid=tdata->tid;
+	bool t_is_abort = false;
+	bool is_abort = false;
 
-    // sort the data-operation records.
-    DataRecordSort((DataRecord*)start, num);
+	for(i=0;i<num;i++)
+	{
+		ptr=(DataRecord*)(start+i*sizeof(DataRecord));
 
-    bool t_is_abort = false;
-    bool is_abort = false;
-
-    for(i=0;i<num;i++)
-    {
-        ptr=(DataRecord*)(start+i*sizeof(DataRecord));
-
-        conn=connect_socket[ptr->node_id][lindex];
-
-        if ((tdata->trans_snap[ptr->node_id] == false) && (tdata->pure_insert[ptr->node_id] == false))
-        {
+		if ((tdata->trans_snap[ptr->node_id] == false) && (tdata->pure_insert[ptr->node_id] == false))
+		{
             TransSnapshot(ptr->node_id);
-        }
+		}
 
-        //send data-insert to node "nid".
-        *(sbuffer) = cmd_prepare;
-        *(sbuffer+1) = tid;
+	    if (Send2(lindex, ptr->node_id, cmd_prepare, tid) == -1)
+	    {
+	    	printf("prepare send error\n");
+	    }
 
-        int num = 2;
-        Send(conn, sbuffer, num);
+	    if (Recv(lindex, ptr->node_id, 1) == -1)
+	    {
+	    	printf("prepare receive error");
+	    }
 
-        // response from "nid".
-        num = 1;
-        Receive(conn, rbuffer, num);
+	    is_abort = *(recv_buffer[lindex]);
 
-        is_abort = *(rbuffer);
+	    if (is_abort)
+	    {
+	    	t_is_abort = true;
+	    }
+	}
 
-        if (is_abort)
-        {
-            t_is_abort = true;
-        }
-    }
-
-    if (t_is_abort)
-    {
-        return -1;
-    }
-    else
-    {
-        return 1;
-    }
+	if (t_is_abort)
+	{
+		return -1;
+	}
+	else
+	{
+	    return 1;
+	}
 }
 
 int GetNodeId(int index)
@@ -511,5 +452,5 @@ int GetNodeId(int index)
 
 int GetLocalIndex(int index)
 {
-    return (index%threadnum);
+	return (index%threadnum);
 }

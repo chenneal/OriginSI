@@ -15,7 +15,7 @@
 
 struct DataRecord
 {
-    int node_id;
+	int node_id;
 };
 
 typedef struct DataRecord DataRecord;

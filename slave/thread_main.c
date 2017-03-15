@@ -4,16 +4,14 @@
  *  Created on: Nov 11, 2015
  *      Author: xiaoxin
  */
-#include <sched.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <time.h>
-#include <sys/time.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include<sched.h>
+#include<pthread.h>
+#include<stdlib.h>
+#include<time.h>
+#include<sys/time.h>
+#include<fcntl.h>
+#include<unistd.h>
+#include<sys/socket.h>
 
 #include"config.h"
 #include"proc.h"
@@ -52,89 +50,86 @@ struct tm sessionStart, sessionEnd;
 
 void EndReport(TransState* StateInfo, int terminals);
 
-void EndReportBank(TransState* StateInfo, int terminals);
-
-
 void InitSys(void)
 {
-    SleepTime=1;
+	SleepTime=1;
 
-    InitConfig();
+	InitConfig();
 
-    SetRandomSeed();
+	SetRandomSeed();
 
-    // initialize the memory space to be used.
-    InitMem();
+	// initialize the memory space to be used.
+	InitMem();
 
-    // initialize pthread_key_t array for thread global variables.
-    InitThreadGlobalKey();
+	// initialize pthread_key_t array for thread global variables.
+	InitThreadGlobalKey();
 
-    InitRecord();
+	InitRecord();
 }
 
 void ThreadRun(int nthreads)
 {
-    int i,err;
+	int i,err;
 
-    pthread_t tid[nthreads];
-    run_args argus[10];
-    for (i = 0; i < 10; i++)
-    {
+	pthread_t tid[nthreads];
+	run_args argus[10];
+	for (i = 0; i < 10; i++)
+	{
        argus[i].i = i+1;
        argus[i].type = 2;
-    }
-    /*
-     * run threads here.
-     */
-    for(i=0;i<nthreads;i++)
-    {
-        err=pthread_create(&tid[i],NULL,ProcStart,(void*)(&argus[i]));
-        if(err!=0)
-        {
-            printf("can't create thread:%s\n",strerror(err));
-            return;
-        }
-    }
+	}
+	/*
+	 * run threads here.
+	 */
+	for(i=0;i<nthreads;i++)
+	{
+		err=pthread_create(&tid[i],NULL,ProcStart,(void*)(&argus[i]));
+		if(err!=0)
+		{
+			printf("can't create thread:%s\n",strerror(err));
+			return;
+		}
+	}
 
-    for(i=0;i<nthreads;i++)
-    {
-        pthread_join(tid[i],NULL);
-    }
+	for(i=0;i<nthreads;i++)
+	{
+		pthread_join(tid[i],NULL);
+	}
 
-    return;
+	return;
 }
 
 void GetReady(void)
 {
-    // get the parameters from the configure file.
-    InitNetworkParam();
+	// get the parameters from the configure file.
+	InitNetworkParam();
 
-    InitConfig();
+	InitConfig();
 
-    // connect the parameter server from the master node.
-    InitParamClient();
-    // get the parameters from the master node.
-    GetParam();
+	// connect the parameter server from the master node.
+	InitParamClient();
+	// get the parameters from the master node.
+	GetParam();
 
-    /* connect the message server from the master node,
-       the message server is used for inform the slave nodes
-       that every nodes have loaded the data.
-    */
+	/* connect the message server from the master node,
+	   the message server is used for inform the slave nodes
+	   that every nodes have loaded the data.
+	*/
 
-    InitMessageClient();
-    InitRecordClient();
+	InitMessageClient();
+	InitRecordClient();
 
-    // the semaphore is used to synchronize the storage process and the transaction process.
-    InitSemaphore();
+	// the semaphore is used to synchronize the storage process and the transaction process.
+	InitSemaphore();
 }
 
 void InitStorage()
 {
-    MallocServerData();
-    InitDatabaseState();
-    InitRecord();
-    InitServerBuffer();
-    InitServer(nodeid);
+	MallocServerData();
+	InitDatabaseState();
+	InitRecord();
+	InitServerBuffer();
+	InitServer(nodeid);
 }
 
 void InitTransaction(void)
@@ -143,25 +138,25 @@ void InitTransaction(void)
 
     SetRandomSeed();
 
-    InitProcHead();
+	InitProcHead();
 
     InitMem();
-    //initialize pthread_key_t array for thread global variables.
-    InitThreadGlobalKey();
+	//initialize pthread_key_t array for thread global variables.
+	InitThreadGlobalKey();
 
-    InitClientBuffer();
+	InitClientBuffer();
 }
 /*
 void ExitSys(void)
 {
-    int i;
+	int i;
 
-    FreeMem();
+	FreeMem();
 
-    for(i=0;i<TABLENUM;i++)
-    {
-        free(TableList[i]);
-    }
+	for(i=0;i<TABLENUM;i++)
+	{
+		free(TableList[i]);
+	}
 }
 */
 
@@ -183,7 +178,7 @@ void LoadData2(void)
    if(err!=0)
    {
       printf("can't create load data thread:%s\n",strerror(err));
-      return;
+	  return;
    }
 
    pthread_join(tid, NULL);
@@ -193,165 +188,150 @@ void LoadData2(void)
 // this semaphore is used by transaction process waiting for the storage process initialize the server.
 void InitSemaphore(void)
 {
-    wait_server = sem_open("wait_server", O_RDWR|O_CREAT, 00777, 0);
+	wait_server = sem_open("wait_server", O_RDWR|O_CREAT, 00777, 0);
 }
 
 
 void RunTerminals(int numTerminals)
 {
-    int i, j;
-    int terminalWarehouseID, terminalDistrictID;
+	int i, j;
+	int terminalWarehouseID, terminalDistrictID;
 
-    int usedTerminal[configWhseCount][10];
-    pthread_t tid[numTerminals];
+	int usedTerminal[configWhseCount][10];
+	pthread_t tid[numTerminals];
 
-    TransState* StateInfo=(TransState*)malloc(sizeof(TransState)*numTerminals);
+	TransState* StateInfo=(TransState*)malloc(sizeof(TransState)*numTerminals);
 
-    i=pthread_barrier_init(&barrier, NULL, numTerminals);
+	i=pthread_barrier_init(&barrier, NULL, numTerminals);
 
-    if(i != 0)
-    {
-        printf("[ERROR]Coundn't create the barrier\n");
-        exit(-1);
-    }
-
-    int cycle;
-
-    for(i=0;i<configWhseCount;i++)
-        for(j=0;j<10;j++)
-            usedTerminal[i][j]=0;
-
-    sessionStartTimestamp=GetCurrentTimestamp();
-
-    printf("run terminals..\n");
-
-    for(i=0;i<numTerminals;i++)
-    {
-        cycle=0;
-        do
-        {
-            terminalWarehouseID=(int)GlobalRandomNumber(1, configWhseCount);
-            terminalDistrictID=(int)GlobalRandomNumber(1, 10);
-            cycle++;
-        }while(usedTerminal[terminalWarehouseID-1][terminalDistrictID-1]);
-        usedTerminal[terminalWarehouseID-1][terminalDistrictID-1]=1;
-
-        printf("terminal %d is running, w_id=%d, d_id=%d\n",i,terminalWarehouseID,terminalDistrictID);
-
-        runTerminal(terminalWarehouseID, terminalDistrictID, &tid[i], &barrier, &StateInfo[i]);
-        sleep(SleepTime);
-
-    }
-
-    for(i=0;i<numTerminals;i++)
-    {
-        pthread_join(tid[i], NULL);
-    }
-    sessionEndTimestamp=GetCurrentTimestamp();
-
-    pthread_barrier_destroy(&barrier);
-
-    printf("begin report.\n");
-    //EndReport(StateInfo, numTerminals);
-
-    //EndReportBank(StateInfo, numTerminals);
-	switch(benchmarkType)
+	if(i != 0)
 	{
-	case TPCC:
-		EndReport(StateInfo, numTerminals);
-		break;
-	case SMALLBANK:
-		EndReportBank(StateInfo, numTerminals);
-		break;
-	default:
-		printf("benchmark not specified\n");
+		printf("[ERROR]Coundn't create the barrier\n");
+		exit(-1);
 	}
+
+	int cycle;
+
+	for(i=0;i<configWhseCount;i++)
+		for(j=0;j<10;j++)
+			usedTerminal[i][j]=0;
+
+	sessionStartTimestamp=GetCurrentTimestamp();
+
+	printf("run terminals..\n");
+
+	for(i=0;i<numTerminals;i++)
+	{
+		cycle=0;
+		do
+		{
+			terminalWarehouseID=(int)GlobalRandomNumber(1, configWhseCount);
+			terminalDistrictID=(int)GlobalRandomNumber(1, 10);
+			cycle++;
+		}while(usedTerminal[terminalWarehouseID-1][terminalDistrictID-1]);
+		usedTerminal[terminalWarehouseID-1][terminalDistrictID-1]=1;
+
+		printf("terminal %d is running, w_id=%d, d_id=%d\n",i,terminalWarehouseID,terminalDistrictID);
+
+		runTerminal(terminalWarehouseID, terminalDistrictID, &tid[i], &barrier, &StateInfo[i]);
+		sleep(SleepTime);
+
+	}
+
+	for(i=0;i<numTerminals;i++)
+	{
+		pthread_join(tid[i], NULL);
+	}
+	sessionEndTimestamp=GetCurrentTimestamp();
+
+	pthread_barrier_destroy(&barrier);
+
+	printf("begin report.\n");
+	EndReport(StateInfo, numTerminals);
 }
 
 void runTerminal(int terminalWarehouseID, int terminalDistrictID, pthread_t *tid, pthread_barrier_t *barrier, TransState* StateInfo)
 {
-    int err;
-    terminalArgs* args=(terminalArgs*)malloc(sizeof(terminalArgs));
-    args->whse_id=terminalWarehouseID;
-    args->dist_id=terminalDistrictID;
-    args->type=1;
+	int err;
+	terminalArgs* args=(terminalArgs*)malloc(sizeof(terminalArgs));
+	args->whse_id=terminalWarehouseID;
+	args->dist_id=terminalDistrictID;
+	args->type=1;
 
-    args->barrier=barrier;
-    args->StateInfo=StateInfo;
+	args->barrier=barrier;
+	args->StateInfo=StateInfo;
 
-    err=pthread_create(tid,NULL,ProcStart,args);
-    if(err!=0)
-    {
-        printf("can't create thread:%s\n",strerror(err));
-        return;
-    }
+	err=pthread_create(tid,NULL,ProcStart,args);
+	if(err!=0)
+	{
+		printf("can't create thread:%s\n",strerror(err));
+		return;
+	}
 }
 
 void dataLoading(void)
 {
-    int err;
-    pthread_t tid;
-    terminalArgs args;
-    args.type=0;
-    args.whse_id=100;
-    args.dist_id=100;
-    // wait the the storage process successfully initialize the server.
-    sem_wait(wait_server);
-    sem_destroy(wait_server);
-    err=pthread_create(&tid, NULL, ProcStart, &args);
-    if(err!=0)
-    {
-        printf("can't create thread:%s\n",strerror(err));
-        return;
-    }
-    pthread_join(tid, NULL);
+	int err;
+	pthread_t tid;
+	terminalArgs args;
+	args.type=0;
+	args.whse_id=100;
+	args.dist_id=100;
+	// wait the the storage process successfully initialize the server.
+	sem_wait(wait_server);
+	sem_destroy(wait_server);
+	err=pthread_create(&tid, NULL, ProcStart, &args);
+	if(err!=0)
+	{
+		printf("can't create thread:%s\n",strerror(err));
+		return;
+	}
+	pthread_join(tid, NULL);
 }
 
 void EndReport(TransState* StateInfo, int terminals)
 {
-    int i;
-    int min, sec, msec;
+	int i;
+	int min, sec, msec;
 
-    int global_total=0, global_abort=0;
-    for(i=0;i<terminals;i++)
-    {
-        transactionCommit+=StateInfo[i].trans_commit;
-        transactionAbort+=StateInfo[i].trans_abort;
-        fastNewOrderCounter+=StateInfo[i].NewOrder;
+	int global_total=0, global_abort=0;
+	for(i=0;i<terminals;i++)
+	{
+		transactionCommit+=StateInfo[i].trans_commit;
+		transactionAbort+=StateInfo[i].trans_abort;
+		fastNewOrderCounter+=StateInfo[i].NewOrder;
 
-        global_total+=StateInfo[i].global_total;
-        global_abort+=StateInfo[i].global_abort;
+		global_total+=StateInfo[i].global_total;
+		global_abort+=StateInfo[i].global_abort;
 
-    }
-    transactionCount=transactionCommit+transactionAbort;
+	}
+	transactionCount=transactionCommit+transactionAbort;
 
-    msec=(sessionEndTimestamp-sessionStartTimestamp)/1000-((terminals-1)*SleepTime*1000);
+	msec=(sessionEndTimestamp-sessionStartTimestamp)/1000-((terminals-1)*SleepTime*1000);
 
 
-    tpmC=(double)((uint64_t)(6000000*fastNewOrderCounter)/msec)/100.0;
-    tpmTotal=(double)((uint64_t)(6000000*transactionCount)/msec)/100.0;
+	tpmC=(double)((uint64_t)(6000000*fastNewOrderCounter)/msec)/100.0;
+	tpmTotal=(double)((uint64_t)(6000000*transactionCount)/msec)/100.0;
 
-    sec=(sessionEndTimestamp-sessionStartTimestamp)/1000000;
-    min=sec/60;
-    sec=sec%60;
+	sec=(sessionEndTimestamp-sessionStartTimestamp)/1000000;
+	min=sec/60;
+	sec=sec%60;
 
-    printf("tpmC = %.2lf\n",tpmC);
-    printf("tpmTotal = %.2lf\n",tpmTotal);
-    printf("session start at : %ld \n",sessionStartTimestamp);
-    printf("session end at : %ld %ld\n",sessionEndTimestamp, sessionEndTimestamp-sessionStartTimestamp);
-    printf("total rumtime is %d min, %d s\n", min, sec);
-    printf("transactionCount:%d, transactionCommit:%d, transactionAbort:%d, %d %d, globaltotoal: %d global_abort: %d\n", transactionCount, transactionCommit, transactionAbort, fastNewOrderCounter, transactionCount, global_total, global_abort);
-    for(i=0;i<terminals;i++)
-    {
-        printf("newOrder:%d, payment:%d, delivery:%d, orderStatus:%d, stockLevel:%d, global_total:%d, global_abort:%d\n",StateInfo[i].NewOrder, StateInfo[i].Payment, StateInfo[i].Delivery, StateInfo[i].Order_status, StateInfo[i].Stock_level, StateInfo[i].global_total, StateInfo[i].global_abort);
-    }
+	printf("tpmC = %.2lf\n",tpmC);
+	printf("tpmTotal = %.2lf\n",tpmTotal);
+	printf("session start at : %ld \n",sessionStartTimestamp);
+	printf("session end at : %ld %ld\n",sessionEndTimestamp, sessionEndTimestamp-sessionStartTimestamp);
+	printf("total rumtime is %d min, %d s\n", min, sec);
+	printf("transactionCount:%d, transactionCommit:%d, transactionAbort:%d, %d %d, globaltotoal: %d global_abort: %d\n", transactionCount, transactionCommit, transactionAbort, fastNewOrderCounter, transactionCount, global_total, global_abort);
+	for(i=0;i<terminals;i++)
+	{
+		printf("newOrder:%d, payment:%d, delivery:%d, orderStatus:%d, stockLevel:%d, global_total:%d, global_abort:%d\n",StateInfo[i].NewOrder, StateInfo[i].Payment, StateInfo[i].Delivery, StateInfo[i].Order_status, StateInfo[i].Stock_level, StateInfo[i].global_total, StateInfo[i].global_abort);
+	}
 
         printf("sleeptime=%d, terminals=%d\n", SleepTime, terminals);
 
-        in_addr_t help = inet_addr(local_ip);
-
         uint64_t buf[5];
-        buf[0] = (uint64_t)help;
+        buf[0] = (uint64_t)ip_suffix;
         buf[1] = (uint64_t)tpmC;
         buf[2] = (uint64_t)tpmTotal;
         buf[3] = transactionAbort;
@@ -360,64 +340,6 @@ void EndReport(TransState* StateInfo, int terminals)
         ret = send(recordfd, buf, sizeof(buf), 0);
         if (ret == -1)
         {
-            printf("record send error\n");
+        	printf("record send error\n");
         }
 }
-
-//smallbank
-void EndReportBank(TransState* StateInfo, int terminals)
-{
-    printf("begin report\n");
-    int i;
-    int min, sec, msec;
-    int global_total=0, global_abort=0;
-
-    for(i=0;i<terminals;i++)
-    {
-        transactionCommit+=StateInfo[i].trans_commit;
-        transactionAbort+=StateInfo[i].trans_abort;
-
-        global_total+=StateInfo[i].global_total;
-        global_abort+=StateInfo[i].global_abort;
-    }
-    transactionCount=transactionCommit+transactionAbort;
-
-    msec=(sessionEndTimestamp-sessionStartTimestamp)/1000-(terminals-1)*SleepTime*1000;
-    //msec=(sessionEndTimestamp-sessionStartTimestamp)/1000;
-    //assert(msec > 0);
-    tpmC=(double)((uint64_t)(6000000*transactionCommit)/msec)/100.0;
-    tpmTotal=(double)((uint64_t)(6000000*transactionCount)/msec)/100.0;
-
-    sec=(sessionEndTimestamp-sessionStartTimestamp)/1000000;
-    min=sec/60;
-    sec=sec%60;
-
-    printf("tpmC = %.2lf\n",tpmC);
-    printf("tpmTotal = %.2lf\n",tpmTotal);
-    printf("session start at : %ld \n",sessionStartTimestamp);
-    printf("session end at : %ld %ld\n",sessionEndTimestamp, sessionEndTimestamp-sessionStartTimestamp);
-    printf("total rumtime is %d min, %d s\n", min, sec);
-    printf("transactionCount:%d, transactionCommit:%d, transactionAbort:%d, %d %d, globaltotoal: %d global_abort: %d\n",transactionCount, transactionCommit, transactionAbort, fastNewOrderCounter, transactionCount, global_total, global_abort);
-    for(i=0;i<terminals;i++)
-    {
-        printf("AMALGAMATE:%d %d, BALANCE:%d %d, DEPOSITCHECKING:%d %d, SENDPAYMENT:%d %d, TRANSACTSAVINGS:%d %d, WRITECHECK:%d %d\n",StateInfo[i].Amalgamate, StateInfo[i].Amalgamate_C, StateInfo[i].Balance, StateInfo[i].Balance_C, StateInfo[i].DepositChecking, StateInfo[i].DepositChecking_C, StateInfo[i].SendPayment, StateInfo[i].SendPayment_C, StateInfo[i].TransactSavings, StateInfo[i].TransactSavings_C, StateInfo[i].WriteCheck, StateInfo[i].WriteCheck_C);
-    }
-
-        printf("nodenum = %d sleeptime=%d, terminals=%d\n", nodenum, SleepTime, terminals);
-
-        in_addr_t help = inet_addr(local_ip);
-
-        uint64_t buf[5];
-        buf[0] = (uint64_t)help;
-        buf[1] = (uint64_t)tpmC;
-        buf[2] = (uint64_t)tpmTotal;
-        buf[3] = transactionAbort;
-        buf[4] = transactionCount;
-        int ret;
-        ret = send(recordfd, buf, sizeof(buf), 0);
-        if (ret == -1)
-        {
-            printf("record send error\n");
-        }    
-}
-

@@ -6,12 +6,12 @@
 #include "snapshot.h"
 
 typedef struct ServerData {
-    int data_num;
-    int lock_num;
-    LocalDataRecord* datarecord;
-    DataLock* lockrecord;
-    // snapshot of the transaction
-    Snapshot *snapshot;
+	int data_num;
+	int lock_num;
+	LocalDataRecord* datarecord;
+	DataLock* lockrecord;
+	// snapshot of the transaction
+	Snapshot *snapshot;
 } ServerData;
 
 extern ServerData* serverdata;

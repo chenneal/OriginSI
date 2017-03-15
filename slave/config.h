@@ -40,21 +40,8 @@ extern int OrderMaxNum;
 
 extern int MaxDataLockNum;
 
-//smallbank
-extern int configNumAccounts;
-extern float scaleFactor;
-extern int configAccountsPerBucket;
-
-extern int FREQUENCY_AMALGAMATE;
-extern int FREQUENCY_BALANCE;
-extern int FREQUENCY_DEPOSIT_CHECKING;
-extern int FREQUENCY_SEND_PAYMENT;
-extern int FREQUENCY_TRANSACT_SAVINGS;
-extern int FREQUENCY_WRITE_CHECK;
-
-
-extern int MIN_BALANCE;
-extern int MAX_BALANCE;
+extern int oneNodeWeight;
+extern int twoNodeWeight;
 
 extern void InitConfig(void);
 

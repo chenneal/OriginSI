@@ -10,17 +10,17 @@
 #include "lock_record.h"
 
 typedef enum TransactionState {
-    inactive,
-    active,
-    committing,
-    prepared,
+	inactive,
+	active,
+	committing,
+	prepared,
     committed,
     aborted
 } TransactionState;
 
 /* wait for more member */
 typedef struct TransactionStateData {
-    TransactionState state;
+	TransactionState state;
 } TransactionStateData;
 
 // record all the states of the current transactions, and store the states

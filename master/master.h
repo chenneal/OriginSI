@@ -29,16 +29,6 @@ extern int oneNodeWeight;
 extern int twoNodeWeight;
 extern int redo_limit;
 
-//hotspot control
-extern int HOTSPOT_PERCENTAGE;
-extern int HOTSPOT_FIXED_SIZE;
-
-//duration control
-extern int extension_limit;
-
-//random read control
-extern int random_read_limit;
-
 extern void InitMasterBuffer(void);
 extern void InitMessage(void);
 extern void InitParam(void);
